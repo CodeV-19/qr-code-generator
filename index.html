@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free QR Code Generator - Create QR Codes Instantly Online</title>
+<meta name="description" content="Generate free QR codes instantly for URLs, text, Wi-Fi, and more. No sign-up required. Download as PNG in seconds — fast, private, and works on any device.">
+<meta name="keywords" content="qr code generator, free qr code, create qr code, qr code maker, online qr code">
+<link rel="canonical" href="https://onlineqrcode.app/">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Free QR Code Generator - Create QR Codes Instantly">
+<meta property="og:description" content="Generate free QR codes for URLs, text, and Wi-Fi. No sign-up. Instant download.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://onlineqrcode.app/">
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2216%22 fill=%22%23111827%22/><rect x=%2218%22 y=%2218%22 width=%2224%22 height=%2224%22 fill=%22%23fff%22/><rect x=%2258%22 y=%2218%22 width=%2224%22 height=%2224%22 fill=%22%23fff%22/><rect x=%2218%22 y=%2258%22 width=%2224%22 height=%2224%22 fill=%22%23fff%22/></svg>">
+
+<!-- JSON-LD structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Free QR Code Generator",
+  "url": "https://onlineqrcode.app/",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --accent:#6366f1; --accent-2:#818cf8;
+    --text:#f1f5f9; --muted:#94a3b8; --border:#334155;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.6;
+  }
+  header{padding:24px 20px; text-align:center; border-bottom:1px solid var(--border);}
+  header h1{font-size:1.4rem; font-weight:700;}
+  header h1 span{color:var(--accent-2);}
+  .container{max-width:880px; margin:0 auto; padding:0 20px;}
+
+  .ad-slot{
+    max-width:880px; margin:16px auto; text-align:center;
+    color:var(--muted); font-size:0.75rem; border:1px dashed var(--border);
+    border-radius:8px; padding:8px; min-height:90px; display:flex;
+    align-items:center; justify-content:center;
+  }
+
+  main{padding:32px 0 16px;}
+  .tool-card{
+    background:var(--panel); border:1px solid var(--border); border-radius:16px;
+    padding:28px; display:grid; grid-template-columns:1fr 260px; gap:28px;
+  }
+  @media (max-width:640px){ .tool-card{grid-template-columns:1fr;} }
+
+  label{display:block; font-size:0.85rem; color:var(--muted); margin-bottom:6px; font-weight:600;}
+  select,input[type=text],input[type=color],input[type=range]{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+    background:#0b1220; color:var(--text); font-size:0.95rem; margin-bottom:16px;
+  }
+  textarea{
+    width:100%; min-height:100px; padding:12px; border-radius:8px; border:1px solid var(--border);
+    background:#0b1220; color:var(--text); font-size:0.95rem; resize:vertical; margin-bottom:16px;
+    font-family:inherit;
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  button{
+    background:var(--accent); color:#fff; border:none; padding:12px 20px;
+    border-radius:8px; font-size:0.95rem; font-weight:600; cursor:pointer; width:100%;
+  }
+  button:hover{background:var(--accent-2);}
+  button.secondary{background:transparent; border:1px solid var(--border); color:var(--text); margin-top:10px;}
+  button.secondary:hover{background:var(--panel); border-color:var(--accent-2);}
+
+  .qr-preview{
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px;
+  }
+  #qrcode{
+    background:#fff; padding:14px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    min-height:216px; min-width:216px;
+  }
+  #qrcode img, #qrcode canvas{display:block;}
+
+  .tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+  .tab-btn{
+    background:#0b1220; border:1px solid var(--border); color:var(--muted);
+    padding:8px 14px; border-radius:999px; font-size:0.8rem; cursor:pointer;
+  }
+  .tab-btn.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  section.info{padding:40px 0; border-top:1px solid var(--border); margin-top:24px;}
+  section.info h2{font-size:1.3rem; margin-bottom:12px;}
+  section.info h3{font-size:1.05rem; margin:20px 0 8px;}
+  section.info p{color:var(--muted); margin-bottom:12px;}
+  .faq-item{margin-bottom:16px;}
+  .faq-item h3{color:var(--text);}
+
+  footer{border-top:1px solid var(--border); padding:24px 20px; text-align:center; color:var(--muted); font-size:0.85rem;}
+  footer a{color:var(--muted); margin:0 8px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Free <span>QR Code</span> Generator</h1>
+</header>
+
+<!-- AD SLOT: top banner - paste AdSense <ins> code here once approved -->
+<div class="ad-slot">Ad slot (top banner)</div>
+
+<div class="container">
+  <main>
+    <div class="tabs" id="typeTabs">
+      <button class="tab-btn active" data-type="url">Website URL</button>
+      <button class="tab-btn" data-type="text">Plain Text</button>
+      <button class="tab-btn" data-type="wifi">Wi-Fi</button>
+      <button class="tab-btn" data-type="email">Email</button>
+    </div>
+
+    <div class="tool-card">
+      <div class="inputs">
+        <div id="field-url">
+          <label for="urlInput">Website URL</label>
+          <input type="text" id="urlInput" placeholder="https://example.com" value="https://example.com">
+        </div>
+
+        <div id="field-text" style="display:none;">
+          <label for="textInput">Text</label>
+          <textarea id="textInput" placeholder="Type any text..."></textarea>
+        </div>
+
+        <div id="field-wifi" style="display:none;">
+          <label for="wifiSsid">Network Name (SSID)</label>
+          <input type="text" id="wifiSsid" placeholder="My Wi-Fi">
+          <label for="wifiPass">Password</label>
+          <input type="text" id="wifiPass" placeholder="password">
+          <label for="wifiEnc">Security</label>
+          <select id="wifiEnc">
+            <option value="WPA">WPA/WPA2</option>
+            <option value="WEP">WEP</option>
+            <option value="nopass">None</option>
+          </select>
+        </div>
+
+        <div id="field-email" style="display:none;">
+          <label for="emailTo">Recipient Email</label>
+          <input type="text" id="emailTo" placeholder="name@example.com">
+          <label for="emailSubject">Subject</label>
+          <input type="text" id="emailSubject" placeholder="Subject">
+        </div>
+
+        <div class="row2">
+          <div>
+            <label for="sizeSelect">Size</label>
+            <select id="sizeSelect">
+              <option value="200">200 x 200</option>
+              <option value="300" selected>300 x 300</option>
+              <option value="500">500 x 500</option>
+              <option value="800">800 x 800</option>
+            </select>
+          </div>
+          <div>
+            <label for="colorInput">Color</label>
+            <input type="color" id="colorInput" value="#000000">
+          </div>
+        </div>
+
+        <button id="generateBtn">Generate QR Code</button>
+      </div>
+
+      <div class="qr-preview">
+        <div id="qrcode"></div>
+        <button class="secondary" id="downloadBtn">Download PNG</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- AD SLOT: in-content - paste AdSense <ins> code here once approved -->
+  <div class="ad-slot">Ad slot (in-content)</div>
+
+  <section class="info">
+    <h2>About This QR Code Generator</h2>
+    <p>This free tool creates QR codes instantly in your browser — no account, no watermark, and no data ever leaves your device. Enter a website link, plain text, Wi-Fi details, or an email address, and download a scannable PNG image in seconds.</p>
+
+    <h3>How to use it</h3>
+    <p>1. Choose a QR type above (URL, text, Wi-Fi, or email). 2. Fill in the details. 3. Click "Generate QR Code." 4. Click "Download PNG" to save the image and use it anywhere — print, packaging, business cards, posters, or menus.</p>
+
+    <h3>Frequently Asked Questions</h3>
+    <div class="faq-item">
+      <h3>Is this QR code generator really free?</h3>
+      <p>Yes. There are no limits, no sign-up, and no expiration on the codes you generate.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Do the QR codes expire?</h3>
+      <p>No. These are static QR codes — the data is encoded directly into the image, so it works forever and isn't tied to this website staying online.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Can I use these QR codes commercially?</h3>
+      <p>Yes, you're free to use generated QR codes for personal or commercial projects.</p>
+    </div>
+  </section>
+</div>
+
+<!-- AD SLOT: footer - paste AdSense <ins> code here once approved -->
+<div class="ad-slot">Ad slot (footer)</div>
+
+<footer>
+  <p>&copy; <span id="year"></span> Free QR Code Generator. All rights reserved.</p>
+  <p><a href="privacy.html">Privacy Policy</a> | <a href="mailto:ozwebbuilders@gmail.com">Contact</a></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+let qr = null;
+const qrHolder = document.getElementById('qrcode');
+
+function buildPayload(type){
+  if(type === 'url'){
+    return document.getElementById('urlInput').value.trim() || 'https://example.com';
+  }
+  if(type === 'text'){
+    return document.getElementById('textInput').value.trim() || ' ';
+  }
+  if(type === 'wifi'){
+    const ssid = document.getElementById('wifiSsid').value.trim();
+    const pass = document.getElementById('wifiPass').value.trim();
+    const enc = document.getElementById('wifiEnc').value;
+    return `WIFI:T:${enc};S:${ssid};P:${enc === 'nopass' ? '' : pass};;`;
+  }
+  if(type === 'email'){
+    const to = document.getElementById('emailTo').value.trim();
+    const subject = encodeURIComponent(document.getElementById('emailSubject').value.trim());
+    return `mailto:${to}?subject=${subject}`;
+  }
+  return '';
+}
+
+function currentType(){
+  return document.querySelector('.tab-btn.active').dataset.type;
+}
+
+function generate(){
+  const type = currentType();
+  const text = buildPayload(type);
+  const size = parseInt(document.getElementById('sizeSelect').value, 10);
+  const color = document.getElementById('colorInput').value;
+
+  qrHolder.innerHTML = '';
+  qr = new QRCode(qrHolder, {
+    text: text,
+    width: size,
+    height: size,
+    colorDark: color,
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+document.getElementById('typeTabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['url','text','wifi','email'].forEach(t => {
+    document.getElementById('field-' + t).style.display = (t === btn.dataset.type) ? 'block' : 'none';
+  });
+});
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const img = qrHolder.querySelector('img');
+  const canvas = qrHolder.querySelector('canvas');
+  const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
+  if(!src){ generate(); return; }
+  const link = document.createElement('a');
+  link.href = src;
+  link.download = 'qrcode.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+generate();
+</script>
+</body>
+</html>
