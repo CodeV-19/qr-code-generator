@@ -70,11 +70,18 @@
     font-family:inherit;
   }
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .logo-row{margin-bottom:16px;}
+  input[type=file]{
+    width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border);
+    background:#0b1220; color:var(--muted); font-size:0.85rem; margin-bottom:8px;
+  }
+  #removeLogoBtn{width:auto; padding:6px 12px; font-size:0.8rem;}
   button{
     background:var(--accent); color:#fff; border:none; padding:12px 20px;
     border-radius:8px; font-size:0.95rem; font-weight:600; cursor:pointer; width:100%;
   }
   button:hover{background:var(--accent-2);}
+  button:disabled{opacity:0.5; cursor:not-allowed;}
   button.secondary{background:transparent; border:1px solid var(--border); color:var(--text); margin-top:10px;}
   button.secondary:hover{background:var(--panel); border-color:var(--accent-2);}
 
@@ -171,6 +178,12 @@
           </div>
         </div>
 
+        <div class="logo-row">
+          <label for="logoInput">Logo (optional)</label>
+          <input type="file" id="logoInput" accept="image/*">
+          <button type="button" class="secondary" id="removeLogoBtn" style="display:none;">Remove Logo</button>
+        </div>
+
         <button id="generateBtn">Generate QR Code</button>
       </div>
 
@@ -262,6 +275,45 @@ function generate(){
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.H
   });
+
+  const logoFile = document.getElementById('logoInput').files[0];
+  if(logoFile){
+    embedLogo(logoFile);
+  }
+}
+
+function embedLogo(file){
+  const downloadBtn = document.getElementById('downloadBtn');
+  downloadBtn.disabled = true;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const logo = new Image();
+    logo.onload = () => {
+      const canvas = qrHolder.querySelector('canvas');
+      const img = qrHolder.querySelector('img');
+      if(canvas){
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        // Cap the logo at ~20% of the QR's area so error correction (level H, ~30% tolerance) keeps it scannable.
+        const logoSize = w * 0.2;
+        const x = (w - logoSize) / 2;
+        const y = (h - logoSize) / 2;
+        const pad = logoSize * 0.15;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2);
+        ctx.drawImage(logo, x, y, logoSize, logoSize);
+
+        if(img){
+          img.src = canvas.toDataURL('image/png');
+        }
+      }
+      downloadBtn.disabled = false;
+    };
+    logo.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 document.getElementById('typeTabs').addEventListener('click', (e) => {
@@ -275,6 +327,18 @@ document.getElementById('typeTabs').addEventListener('click', (e) => {
 });
 
 document.getElementById('generateBtn').addEventListener('click', generate);
+
+document.getElementById('logoInput').addEventListener('change', () => {
+  const hasFile = document.getElementById('logoInput').files.length > 0;
+  document.getElementById('removeLogoBtn').style.display = hasFile ? 'inline-block' : 'none';
+  generate();
+});
+
+document.getElementById('removeLogoBtn').addEventListener('click', () => {
+  document.getElementById('logoInput').value = '';
+  document.getElementById('removeLogoBtn').style.display = 'none';
+  generate();
+});
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
   const img = qrHolder.querySelector('img');
