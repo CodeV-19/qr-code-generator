@@ -69,7 +69,24 @@
     background:#0b1220; color:var(--text); font-size:0.95rem; resize:vertical; margin-bottom:16px;
     font-family:inherit;
   }
-  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .color-swatches{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;}
+  .swatch{
+    width:34px; height:34px; border-radius:50%; border:2px solid var(--border);
+    cursor:pointer; padding:0; flex-shrink:0; transition:transform 0.12s ease, border-color 0.12s ease;
+  }
+  .swatch:hover{transform:scale(1.1);}
+  .swatch.active{border-color:var(--accent-2); box-shadow:0 0 0 3px rgba(129,140,248,0.35);}
+  .swatch-custom{
+    background:#0b1220; display:flex; align-items:center; justify-content:center;
+    border-style:dashed; color:var(--muted); font-size:1.1rem; line-height:1;
+  }
+  .swatch-custom .plus-icon{pointer-events:none;}
+  .swatch-custom.has-custom-color{border-style:solid;}
+  .swatch-custom.has-custom-color .plus-icon{display:none;}
+  #colorInput{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
   .logo-row{margin-bottom:16px;}
   input[type=file]{
     width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border);
@@ -162,20 +179,27 @@
           <input type="text" id="emailSubject" placeholder="Subject">
         </div>
 
-        <div class="row2">
-          <div>
-            <label for="sizeSelect">Size</label>
-            <select id="sizeSelect">
-              <option value="200">200 x 200</option>
-              <option value="300" selected>300 x 300</option>
-              <option value="500">500 x 500</option>
-              <option value="800">800 x 800</option>
-            </select>
+        <div>
+          <label for="sizeSelect">Size</label>
+          <select id="sizeSelect">
+            <option value="200">200 x 200</option>
+            <option value="300" selected>300 x 300</option>
+            <option value="500">500 x 500</option>
+            <option value="800">800 x 800</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Color</label>
+          <div class="color-swatches" id="colorSwatches">
+            <button type="button" class="swatch active" data-color="#000000" style="background:#000000" aria-label="Black" title="Black"></button>
+            <button type="button" class="swatch" data-color="#6366f1" style="background:#6366f1" aria-label="Indigo" title="Indigo"></button>
+            <button type="button" class="swatch" data-color="#1d4ed8" style="background:#1d4ed8" aria-label="Blue" title="Blue"></button>
+            <button type="button" class="swatch" data-color="#dc2626" style="background:#dc2626" aria-label="Red" title="Red"></button>
+            <button type="button" class="swatch" data-color="#16a34a" style="background:#16a34a" aria-label="Green" title="Green"></button>
+            <button type="button" class="swatch swatch-custom" id="customSwatchBtn" aria-label="Custom color" title="Custom color"><span class="plus-icon">+</span></button>
           </div>
-          <div>
-            <label for="colorInput">Color</label>
-            <input type="color" id="colorInput" value="#000000">
-          </div>
+          <input type="color" id="colorInput" value="#000000">
         </div>
 
         <div class="logo-row">
@@ -327,6 +351,36 @@ document.getElementById('typeTabs').addEventListener('click', (e) => {
 });
 
 document.getElementById('generateBtn').addEventListener('click', generate);
+
+const colorInput = document.getElementById('colorInput');
+const customSwatchBtn = document.getElementById('customSwatchBtn');
+
+function setActiveSwatch(customSelected){
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  if(customSelected){
+    customSwatchBtn.classList.add('active');
+  } else {
+    const match = document.querySelector(`.swatch[data-color="${colorInput.value}"]`);
+    if(match) match.classList.add('active');
+  }
+}
+
+document.querySelectorAll('.swatch[data-color]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    colorInput.value = btn.dataset.color;
+    setActiveSwatch(false);
+    generate();
+  });
+});
+
+customSwatchBtn.addEventListener('click', () => colorInput.click());
+
+colorInput.addEventListener('input', () => {
+  customSwatchBtn.style.background = colorInput.value;
+  customSwatchBtn.classList.add('has-custom-color');
+  setActiveSwatch(true);
+  generate();
+});
 
 document.getElementById('logoInput').addEventListener('change', () => {
   const hasFile = document.getElementById('logoInput').files.length > 0;
