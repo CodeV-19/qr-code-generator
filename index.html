@@ -385,13 +385,39 @@ if (typeof navigator.share === 'function') {
   downloadBtnEl.textContent = 'Save / Share QR';
 }
 
-downloadBtnEl.addEventListener('click', async () => {
-  const img = qrHolder.querySelector('img');
-  const canvas = qrHolder.querySelector('canvas');
-  const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
-  if(!src){ generate(); return; }
+function isTouchDevice(){
+  return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+}
 
-  const blob = await (await fetch(src)).blob();
+function getQrBlob(){
+  return new Promise((resolve, reject) => {
+    const canvas = qrHolder.querySelector('canvas');
+    if (canvas) {
+      // canvas.toBlob() is much faster than fetching the data URI, which matters because
+      // any delay before calling navigator.share() can invalidate the user-gesture
+      // requirement on some mobile browsers (notably iOS Safari), causing it to silently fail.
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('toBlob failed')), 'image/png');
+      return;
+    }
+    const img = qrHolder.querySelector('img');
+    if (img) {
+      fetch(img.src).then(r => r.blob()).then(resolve).catch(reject);
+      return;
+    }
+    reject(new Error('No QR code to export'));
+  });
+}
+
+downloadBtnEl.addEventListener('click', async () => {
+  if (!qrHolder.querySelector('canvas') && !qrHolder.querySelector('img')) { generate(); return; }
+
+  let blob;
+  try {
+    blob = await getQrBlob();
+  } catch (err) {
+    generate();
+    return;
+  }
   const file = new File([blob], 'qrcode.png', { type: 'image/png' });
 
   // Mobile browsers: hand off to the native share sheet (Save Image, Messages, Email, etc.)
@@ -402,11 +428,19 @@ downloadBtnEl.addEventListener('click', async () => {
       return;
     } catch (err) {
       if (err.name === 'AbortError') return;
-      // fall through to the download fallback below on any other error
+      // fall through on any other error
     }
   }
 
   const blobUrl = URL.createObjectURL(blob);
+
+  if (isTouchDevice()) {
+    // Web Share isn't available (or failed) on a touch device — open the image directly so the
+    // browser's own full-page image viewer offers Save/Share controls via long-press or its UI.
+    window.open(blobUrl, '_blank');
+    return;
+  }
+
   const link = document.createElement('a');
   link.href = blobUrl;
   link.download = 'qrcode.png';
