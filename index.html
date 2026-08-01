@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Free QR Code Generator - Create QR Codes Instantly Online</title>
-<meta name="description" content="Generate free QR codes instantly for URLs, text, Wi-Fi, and more. No sign-up required. Download as PNG in seconds — fast, private, and works on any device.">
+<meta name="description" content="Generate free QR codes instantly for URLs, text, Wi-Fi, and more. No sign-up required. Download as PNG or scalable SVG in seconds — fast, private, and works on any device.">
 <meta name="keywords" content="qr code generator, free qr code, create qr code, qr code maker, online qr code">
 <link rel="canonical" href="https://onlineqrcode.app/">
 
@@ -105,7 +105,8 @@
     background:#fff; padding:14px; border-radius:12px; display:flex; align-items:center; justify-content:center;
     min-height:216px; min-width:216px; max-width:100%; box-sizing:border-box; overflow:hidden;
   }
-  #qrcode img, #qrcode canvas{display:block; max-width:100%; height:auto;}
+  #qrcode img, #qrcode canvas, #qrcode svg{display:block; max-width:100%; height:auto;}
+  .format-tabs{margin-bottom:16px;}
 
   .tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
   .tab-btn{
@@ -183,6 +184,14 @@
           </select>
         </div>
 
+        <div class="format-tabs">
+          <label>File Format</label>
+          <div class="tabs" id="formatTabs">
+            <button class="tab-btn active" data-format="png">PNG</button>
+            <button class="tab-btn" data-format="svg">SVG</button>
+          </div>
+        </div>
+
         <div>
           <label>Color</label>
           <div class="color-swatches" id="colorSwatches">
@@ -223,10 +232,10 @@
 
   <section class="info">
     <h2>About This QR Code Generator</h2>
-    <p>This free tool creates QR codes instantly in your browser — no account, no watermark, and no data ever leaves your device. Enter a website link, plain text, Wi-Fi details, or an email address, and download a scannable PNG image in seconds.</p>
+    <p>This free tool creates QR codes instantly in your browser — no account, no watermark, and no data ever leaves your device. Enter a website link, plain text, Wi-Fi details, or an email address, and export a scannable QR code as a PNG image or a scalable SVG in seconds.</p>
 
     <h3>How to use it</h3>
-    <p>1. Choose a QR type above (URL, text, Wi-Fi, or email). 2. Fill in the details. 3. (Optional) Upload a logo to embed in the center of the code — it's automatically sized and padded so the QR code stays scannable. 4. Click "Generate QR Code." 5. Click "Download PNG" to save the image and use it anywhere — print, packaging, business cards, posters, or menus.</p>
+    <p>1. Choose a QR type above (URL, text, Wi-Fi, or email). 2. Fill in the details. 3. Pick PNG or SVG as your file format — SVG is ideal for print and large-format use since it scales without losing quality. 4. (Optional) Upload a logo to embed in the center of the code — it's automatically sized and padded so the QR code stays scannable. 5. Click "Generate QR Code." 6. Click "Share" to send it directly, or "Download" to save the file and use it anywhere — print, packaging, business cards, posters, or menus.</p>
 
     <h3>Frequently Asked Questions</h3>
     <div class="faq-item">
@@ -250,11 +259,51 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js"></script>
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
 
 let qr = null;
+let currentFormat = 'png';
 const qrHolder = document.getElementById('qrcode');
+
+function buildQrSvgElement(text, targetSize, colorDark, colorLight){
+  const qrObj = qrcode(0, 'H');
+  qrObj.addData(text);
+  qrObj.make();
+  const moduleCount = qrObj.getModuleCount();
+  // Standard 4-module-equivalent quiet zone, matching the library's own default convention.
+  const cellSize = targetSize / (moduleCount + 8);
+  const margin = cellSize * 4;
+  const totalSize = moduleCount * cellSize + margin * 2;
+  const rectPath = 'l' + cellSize + ',0 0,' + cellSize + ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+  let path = '';
+  for (let r = 0; r < moduleCount; r++) {
+    const mr = r * cellSize + margin;
+    for (let c = 0; c < moduleCount; c++) {
+      if (qrObj.isDark(r, c)) {
+        const mc = c * cellSize + margin;
+        path += 'M' + mc + ',' + mr + rectPath;
+      }
+    }
+  }
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('width', totalSize);
+  svg.setAttribute('height', totalSize);
+  svg.setAttribute('viewBox', `0 0 ${totalSize} ${totalSize}`);
+  const bgRect = document.createElementNS(svgNS, 'rect');
+  bgRect.setAttribute('width', '100%');
+  bgRect.setAttribute('height', '100%');
+  bgRect.setAttribute('fill', colorLight);
+  svg.appendChild(bgRect);
+  const pathEl = document.createElementNS(svgNS, 'path');
+  pathEl.setAttribute('d', path);
+  pathEl.setAttribute('fill', colorDark);
+  pathEl.setAttribute('stroke', 'transparent');
+  svg.appendChild(pathEl);
+  return svg;
+}
 
 function buildPayload(type){
   if(type === 'url'){
@@ -288,14 +337,20 @@ function generate(){
   const color = document.getElementById('colorInput').value;
 
   qrHolder.innerHTML = '';
-  qr = new QRCode(qrHolder, {
-    text: text,
-    width: size,
-    height: size,
-    colorDark: color,
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
+
+  if (currentFormat === 'svg') {
+    const svg = buildQrSvgElement(text, size, color, '#ffffff');
+    qrHolder.appendChild(svg);
+  } else {
+    qr = new QRCode(qrHolder, {
+      text: text,
+      width: size,
+      height: size,
+      colorDark: color,
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
 
   const logoFile = document.getElementById('logoInput').files[0];
   if(logoFile){
@@ -310,6 +365,40 @@ function embedLogo(file){
   downloadBtn.disabled = true;
   const reader = new FileReader();
   reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    const svg = qrHolder.querySelector('svg');
+
+    if (svg) {
+      // Same 20%-of-area cap and white backing plate as the canvas path, expressed as real SVG nodes.
+      const totalSize = svg.viewBox.baseVal.width;
+      const logoSize = totalSize * 0.2;
+      const x = (totalSize - logoSize) / 2;
+      const y = (totalSize - logoSize) / 2;
+      const pad = logoSize * 0.15;
+      const svgNS = 'http://www.w3.org/2000/svg';
+
+      const bgRect = document.createElementNS(svgNS, 'rect');
+      bgRect.setAttribute('x', x - pad);
+      bgRect.setAttribute('y', y - pad);
+      bgRect.setAttribute('width', logoSize + pad * 2);
+      bgRect.setAttribute('height', logoSize + pad * 2);
+      bgRect.setAttribute('fill', '#ffffff');
+      svg.appendChild(bgRect);
+
+      const imageEl = document.createElementNS(svgNS, 'image');
+      imageEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl);
+      imageEl.setAttribute('href', dataUrl);
+      imageEl.setAttribute('x', x);
+      imageEl.setAttribute('y', y);
+      imageEl.setAttribute('width', logoSize);
+      imageEl.setAttribute('height', logoSize);
+      svg.appendChild(imageEl);
+
+      shareBtn.disabled = false;
+      downloadBtn.disabled = false;
+      return;
+    }
+
     const logo = new Image();
     logo.onload = () => {
       const canvas = qrHolder.querySelector('canvas');
@@ -335,7 +424,7 @@ function embedLogo(file){
       shareBtn.disabled = false;
       downloadBtn.disabled = false;
     };
-    logo.src = e.target.result;
+    logo.src = dataUrl;
   };
   reader.readAsDataURL(file);
 }
@@ -343,11 +432,20 @@ function embedLogo(file){
 document.getElementById('typeTabs').addEventListener('click', (e) => {
   const btn = e.target.closest('.tab-btn');
   if(!btn) return;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#typeTabs .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   ['url','text','wifi','email'].forEach(t => {
     document.getElementById('field-' + t).style.display = (t === btn.dataset.type) ? 'block' : 'none';
   });
+});
+
+document.getElementById('formatTabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('#formatTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFormat = btn.dataset.format;
+  generate();
 });
 
 document.getElementById('generateBtn').addEventListener('click', generate);
@@ -403,6 +501,12 @@ function isTouchDevice(){
 
 function getQrBlob(){
   return new Promise((resolve, reject) => {
+    const svg = qrHolder.querySelector('svg');
+    if (svg) {
+      const svgString = new XMLSerializer().serializeToString(svg);
+      resolve(new Blob([svgString], { type: 'image/svg+xml' }));
+      return;
+    }
     const canvas = qrHolder.querySelector('canvas');
     if (canvas) {
       // canvas.toBlob() is much faster than fetching the data URI, which matters because
@@ -420,8 +524,16 @@ function getQrBlob(){
   });
 }
 
+function getQrFilename(){
+  return qrHolder.querySelector('svg') ? 'qrcode.svg' : 'qrcode.png';
+}
+
+function hasRenderedQr(){
+  return !!(qrHolder.querySelector('canvas') || qrHolder.querySelector('img') || qrHolder.querySelector('svg'));
+}
+
 shareBtnEl.addEventListener('click', async () => {
-  if (!qrHolder.querySelector('canvas') && !qrHolder.querySelector('img')) { generate(); return; }
+  if (!hasRenderedQr()) { generate(); return; }
 
   let blob;
   try {
@@ -429,7 +541,7 @@ shareBtnEl.addEventListener('click', async () => {
   } catch (err) {
     return;
   }
-  const file = new File([blob], 'qrcode.png', { type: 'image/png' });
+  const file = new File([blob], getQrFilename(), { type: blob.type });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
@@ -441,7 +553,7 @@ shareBtnEl.addEventListener('click', async () => {
 });
 
 downloadBtnEl.addEventListener('click', async () => {
-  if (!qrHolder.querySelector('canvas') && !qrHolder.querySelector('img')) { generate(); return; }
+  if (!hasRenderedQr()) { generate(); return; }
 
   let blob;
   try {
@@ -453,18 +565,19 @@ downloadBtnEl.addEventListener('click', async () => {
 
   const blobUrl = URL.createObjectURL(blob);
 
-  if (isTouchDevice()) {
-    // On touch devices, open the image directly so the browser's own full-page image
-    // viewer offers a real Save/Download option — more reliable than <a download>,
+  if (!qrHolder.querySelector('svg') && isTouchDevice()) {
+    // On touch devices, open the raster image directly so the browser's own full-page
+    // image viewer offers a real Save/Download option — more reliable than <a download>,
     // which mobile Safari/Chrome often ignore, and separate from the OS share sheet
-    // (which doesn't always include a "save to device" option).
+    // (which doesn't always include a "save to device" option). SVG isn't a "photo" in
+    // the same sense, so a plain download link is the more predictable choice for it.
     window.open(blobUrl, '_blank');
     return;
   }
 
   const link = document.createElement('a');
   link.href = blobUrl;
-  link.download = 'qrcode.png';
+  link.download = getQrFilename();
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
