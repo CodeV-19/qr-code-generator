@@ -95,6 +95,8 @@
   button:disabled{opacity:0.5; cursor:not-allowed;}
   button.secondary{background:transparent; border:1px solid var(--border); color:var(--text); margin-top:10px;}
   button.secondary:hover{background:var(--panel); border-color:var(--accent-2);}
+  .qr-actions{display:flex; gap:10px; width:100%;}
+  .qr-actions button{width:auto; flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;}
 
   .qr-preview{
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px;
@@ -205,7 +207,16 @@
 
       <div class="qr-preview">
         <div id="qrcode"></div>
-        <button class="secondary" id="downloadBtn">Download PNG</button>
+        <div class="qr-actions">
+          <button class="secondary" id="shareBtn" aria-label="Share QR code">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"></line><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line></svg>
+            Share
+          </button>
+          <button class="secondary" id="downloadBtn" aria-label="Download QR code">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="4" y1="20" x2="20" y2="20"></line></svg>
+            Download
+          </button>
+        </div>
       </div>
     </div>
   </main>
@@ -293,7 +304,9 @@ function generate(){
 }
 
 function embedLogo(file){
+  const shareBtn = document.getElementById('shareBtn');
   const downloadBtn = document.getElementById('downloadBtn');
+  shareBtn.disabled = true;
   downloadBtn.disabled = true;
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -319,6 +332,7 @@ function embedLogo(file){
           img.src = canvas.toDataURL('image/png');
         }
       }
+      shareBtn.disabled = false;
       downloadBtn.disabled = false;
     };
     logo.src = e.target.result;
@@ -380,10 +394,8 @@ document.getElementById('removeLogoBtn').addEventListener('click', () => {
   generate();
 });
 
+const shareBtnEl = document.getElementById('shareBtn');
 const downloadBtnEl = document.getElementById('downloadBtn');
-if (typeof navigator.share === 'function') {
-  downloadBtnEl.textContent = 'Save / Share QR';
-}
 
 function isTouchDevice(){
   return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
@@ -408,6 +420,26 @@ function getQrBlob(){
   });
 }
 
+shareBtnEl.addEventListener('click', async () => {
+  if (!qrHolder.querySelector('canvas') && !qrHolder.querySelector('img')) { generate(); return; }
+
+  let blob;
+  try {
+    blob = await getQrBlob();
+  } catch (err) {
+    return;
+  }
+  const file = new File([blob], 'qrcode.png', { type: 'image/png' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'QR Code' });
+    } catch (err) {
+      // AbortError just means the user closed the share sheet — nothing to do either way.
+    }
+  }
+});
+
 downloadBtnEl.addEventListener('click', async () => {
   if (!qrHolder.querySelector('canvas') && !qrHolder.querySelector('img')) { generate(); return; }
 
@@ -418,25 +450,14 @@ downloadBtnEl.addEventListener('click', async () => {
     generate();
     return;
   }
-  const file = new File([blob], 'qrcode.png', { type: 'image/png' });
-
-  // Mobile browsers: hand off to the native share sheet (Save Image, Messages, Email, etc.)
-  // instead of relying on the <a download> attribute, which mobile Safari/Chrome often ignore for data URIs.
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: 'QR Code' });
-      return;
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      // fall through on any other error
-    }
-  }
 
   const blobUrl = URL.createObjectURL(blob);
 
   if (isTouchDevice()) {
-    // Web Share isn't available (or failed) on a touch device — open the image directly so the
-    // browser's own full-page image viewer offers Save/Share controls via long-press or its UI.
+    // On touch devices, open the image directly so the browser's own full-page image
+    // viewer offers a real Save/Download option — more reliable than <a download>,
+    // which mobile Safari/Chrome often ignore, and separate from the OS share sheet
+    // (which doesn't always include a "save to device" option).
     window.open(blobUrl, '_blank');
     return;
   }
