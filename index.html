@@ -380,17 +380,40 @@ document.getElementById('removeLogoBtn').addEventListener('click', () => {
   generate();
 });
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+const downloadBtnEl = document.getElementById('downloadBtn');
+if (typeof navigator.share === 'function') {
+  downloadBtnEl.textContent = 'Save / Share QR';
+}
+
+downloadBtnEl.addEventListener('click', async () => {
   const img = qrHolder.querySelector('img');
   const canvas = qrHolder.querySelector('canvas');
   const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
   if(!src){ generate(); return; }
+
+  const blob = await (await fetch(src)).blob();
+  const file = new File([blob], 'qrcode.png', { type: 'image/png' });
+
+  // Mobile browsers: hand off to the native share sheet (Save Image, Messages, Email, etc.)
+  // instead of relying on the <a download> attribute, which mobile Safari/Chrome often ignore for data URIs.
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'QR Code' });
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      // fall through to the download fallback below on any other error
+    }
+  }
+
+  const blobUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = src;
+  link.href = blobUrl;
   link.download = 'qrcode.png';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(blobUrl);
 });
 
 generate();
